@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@MapperScan("com.baomidou.mybatisplus./mapper/*Mapper.xml")
+@MapperScan("com.shop2242.shop_online.mapper")
 public class ShopOnlineApplication {
 
     public static void main(String[] args) {
