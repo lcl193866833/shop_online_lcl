@@ -1,5 +1,7 @@
 package com.shop2242.shop_online.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.shop2242.shop_online.common.utils.DateUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -25,7 +27,7 @@ public class UserVO {
     @Schema(description = "性别")
     private Integer gender;
     @Schema(description = "生日")
-//    @JsonFormat(pattern = DateUtils.DATE_PATTERN)
+    @JsonFormat(pattern = DateUtils.DATE_PATTERN)
     private Timestamp birthday;
     @Schema(description = "职业")
     private String profession;
