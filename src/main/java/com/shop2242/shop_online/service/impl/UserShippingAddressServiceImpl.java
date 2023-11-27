@@ -52,6 +52,7 @@ public class UserShippingAddressServiceImpl extends ServiceImpl<UserShippingAddr
                 throw new ServerException("已经存在默认地址，请勿重复操作");
             }
         }
+        convert.setId(0);
         save(convert);
         return convert.getId();
     }

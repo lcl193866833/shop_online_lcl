@@ -18,6 +18,7 @@
     <select id="getCartGoodsInfo" resultType="com.shop2242.shop_online.vo.CartGoodsVO">
         select cart.id,
                goods.name,
+               cart.goods_id,
                goods.cover     as picture,
                cart.attrs_text,
                cart.price,
