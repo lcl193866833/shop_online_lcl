@@ -10,6 +10,7 @@ import com.shop2242.shop_online.convert.UserOrderDetailConvert;
 import com.shop2242.shop_online.entity.*;
 import com.shop2242.shop_online.enums.OrderStatusEnum;
 import com.shop2242.shop_online.mapper.*;
+import com.shop2242.shop_online.query.CancelGoodsQuery;
 import com.shop2242.shop_online.query.OrderGoodsQuery;
 import com.shop2242.shop_online.query.OrderPreQuery;
 import com.shop2242.shop_online.query.OrderQuery;
@@ -65,7 +66,7 @@ public class UserOrderServiceImpl extends ServiceImpl<UserOrderMapper, UserOrder
     @Async
     public void scheduleOrderCancel(UserOrder userOrder) {
         cancelTask = executorService.schedule(() -> {
-            if (userOrder.getStatus() == OrderStatusEnum.WAITING_FOR_PAYMENT.getValue()) {
+            if (userOrder.getStatus().equals(OrderStatusEnum.WAITING_FOR_PAYMENT.getValue())) {
                 userOrder.setStatus(OrderStatusEnum.CANCELLED.getValue());
                 baseMapper.updateById((userOrder));
             }
@@ -194,7 +195,6 @@ public class UserOrderServiceImpl extends ServiceImpl<UserOrderMapper, UserOrder
         for (UserShoppingCart shoppingCart : cartList) {
             Goods goods = goodsMapper.selectById(shoppingCart.getGoodsId());
             UserOrderGoodsVO userOrderGoodsVO = new UserOrderGoodsVO();
-
             userOrderGoodsVO.setId(goods.getId());
             userOrderGoodsVO.setName(goods.getName());
             userOrderGoodsVO.setPicture(goods.getCover());
@@ -326,6 +326,36 @@ public class UserOrderServiceImpl extends ServiceImpl<UserOrderMapper, UserOrder
         }
         return new PageResult<>(page.getTotal(), query.getPageSize(), query.getPage(), page.getPages(), list);
 
+    }
+
+    @Override
+    public OrderDetailVO cancelOrder(CancelGoodsQuery query) {
+        // 1. 查询订单是否存在
+        UserOrder userOrder = baseMapper.selectById(query.getId());
+        if (userOrder == null) {
+            throw new ServerException("订单信息不存在");
+        }
+        // 2. 未付款状态才能取消订单
+        if (!userOrder.getStatus().equals(OrderStatusEnum.WAITING_FOR_PAYMENT.getValue())) {
+            throw new ServerException("订单已付款，取消失败");
+        }
+        // 3. 修改订单状态
+        userOrder.setStatus(OrderStatusEnum.CANCELLED.getValue());
+        userOrder.setCancelReason(query.getCancelReason());
+        userOrder.setCloseTime(LocalDateTime.now());
+        baseMapper.updateById(userOrder);
+        OrderDetailVO orderDetailVO = UserOrderDetailConvert.INSTANCE.convertToOrderDetailVO(userOrder);
+        // 4. 查询订单地址信息
+        UserShippingAddress userShoppingAddress = userShoppingAddressMapper.selectById(userOrder.getAddressId());
+        if (userShoppingAddress != null) {
+            orderDetailVO.setReceiverContact(userShoppingAddress.getReceiver());
+            orderDetailVO.setReceiverAddress(userShoppingAddress.getAddress());
+            orderDetailVO.setReceiverMobile(userShoppingAddress.getContact());
+        }
+        // 5. 查询购买的商品列表返回给客户端
+        List<UserOrderGoods> goodsList = userOrderGoodsMapper.selectList(new LambdaQueryWrapper<UserOrderGoods>().eq(UserOrderGoods::getOrderId, userOrder.getId()));
+        orderDetailVO.setSkus(goodsList);
+        return orderDetailVO;
     }
     public List<UserAddressVO> getAddressListByUserId(Integer userId, Integer addressId) {
         // 1. 根据用户id查询该用户的收货地址列表
