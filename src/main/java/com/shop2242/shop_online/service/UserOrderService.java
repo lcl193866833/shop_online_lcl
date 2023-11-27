@@ -10,6 +10,8 @@ import com.shop2242.shop_online.vo.OrderDetailVO;
 import com.shop2242.shop_online.vo.SubmitOrderVO;
 import com.shop2242.shop_online.vo.UserOrderVO;
 
+import java.util.List;
+
 /**
  * <p>
  *  服务类
@@ -78,4 +80,28 @@ public interface UserOrderService extends IService<UserOrder> {
      * @return OrderDetailVO
      */
     OrderDetailVO cancelOrder(CancelGoodsQuery query);
+
+
+    /**
+     * 删除订单
+     *
+     * @param ids
+     */
+    void deleteOrder(List<Integer> ids, Integer userId);
+
+
+    /**
+     * 模拟发货
+     *
+     * @param id
+     */
+    void consignOrder(Integer id);
+
+
+    /**
+     * 订单支付
+     *
+     * @param id
+     */
+    void payOrder(Integer id);
 }
