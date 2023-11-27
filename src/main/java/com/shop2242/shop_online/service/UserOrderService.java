@@ -7,6 +7,7 @@ import com.shop2242.shop_online.query.CancelGoodsQuery;
 import com.shop2242.shop_online.query.OrderPreQuery;
 import com.shop2242.shop_online.query.OrderQuery;
 import com.shop2242.shop_online.vo.OrderDetailVO;
+import com.shop2242.shop_online.vo.OrderLogisticVO;
 import com.shop2242.shop_online.vo.SubmitOrderVO;
 import com.shop2242.shop_online.vo.UserOrderVO;
 
@@ -104,4 +105,22 @@ public interface UserOrderService extends IService<UserOrder> {
      * @param id
      */
     void payOrder(Integer id);
+
+
+    /**
+     * 确认收货
+     *
+     * @param id
+     * @return OrderDetailVO
+     */
+    OrderDetailVO receiptOrder(Integer id);
+
+
+    /**
+     * 物流订单信息
+     *
+     * @param id
+     * @return OrderLogisticVO
+     */
+    OrderLogisticVO getOrderLogistics(Integer id);
 }

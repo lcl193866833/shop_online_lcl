@@ -8,6 +8,7 @@ import com.shop2242.shop_online.common.result.Result;
 import com.shop2242.shop_online.query.CancelGoodsQuery;
 import com.shop2242.shop_online.query.OrderQuery;
 import com.shop2242.shop_online.service.UserOrderService;
+import com.shop2242.shop_online.vo.OrderLogisticVO;
 import com.shop2242.shop_online.vo.SubmitOrderVO;
 import com.shop2242.shop_online.vo.UserOrderVO;
 import com.shop2242.shop_online.vo.OrderDetailVO;
@@ -120,4 +121,23 @@ public class UserOrderController {
         return Result.ok();
     }
 
+    @Operation(summary = "确认收货")
+    @PutMapping("receipt")
+    public Result<OrderDetailVO> receiptOrder(@RequestParam Integer id) {
+        if (id == null) {
+            throw new ServerException("订单不存在");
+        }
+        OrderDetailVO orderDetailVO = userOrderService.receiptOrder(id);
+        return Result.ok(orderDetailVO);
+    }
+
+    @Operation(summary = "获取物流信息")
+    @GetMapping("logistics")
+    public Result<OrderLogisticVO> getOrderLogistics(@RequestParam Integer id) {
+        if (id == null) {
+            throw new ServerException("订单不存在");
+        }
+        OrderLogisticVO orderLogistics = userOrderService.getOrderLogistics(id);
+        return Result.ok(orderLogistics);
+    }
 }
