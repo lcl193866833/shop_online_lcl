@@ -1,8 +1,10 @@
 package com.shop2242.shop_online.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.generator.IFill;
 import com.shop2242.shop_online.common.exception.ServerException;
+import com.shop2242.shop_online.common.result.PageResult;
 import com.shop2242.shop_online.convert.UserAddressConvert;
 import com.shop2242.shop_online.convert.UserOrderDetailConvert;
 import com.shop2242.shop_online.entity.*;
@@ -10,6 +12,7 @@ import com.shop2242.shop_online.enums.OrderStatusEnum;
 import com.shop2242.shop_online.mapper.*;
 import com.shop2242.shop_online.query.OrderGoodsQuery;
 import com.shop2242.shop_online.query.OrderPreQuery;
+import com.shop2242.shop_online.query.OrderQuery;
 import com.shop2242.shop_online.service.UserOrderGoodsService;
 import com.shop2242.shop_online.service.UserOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -104,7 +107,8 @@ public class UserOrderServiceImpl extends ServiceImpl<UserOrderMapper, UserOrder
         for (OrderGoodsQuery goodsVO : orderVO.getGoods()) {
             Goods goods = goodsMapper.selectById(goodsVO.getId());
             if (goodsVO.getCount() > goods.getInventory()) {
-                throw new ServerException(goods.getName() + "库存数量不足");
+//                throw new ServerException(goods.getName() + "库存数量不足");
+                throw new ServerException("库存数量不足");
             }
             UserOrderGoods userOrderGoods = new UserOrderGoods();
 
@@ -237,7 +241,8 @@ public class UserOrderServiceImpl extends ServiceImpl<UserOrderMapper, UserOrder
             throw new ServerException("商品信息不存在");
         }
         if (orderPreQuery.getCount() > goods.getInventory()) {
-            throw new ServerException(goods.getName() + "库存数量不足");
+//            throw new ServerException(goods.getName() + "库存数量不足");
+            throw new ServerException("库存数量不足");
         }
         UserOrderGoodsVO userOrderGoodsVO = new UserOrderGoodsVO();
         userOrderGoodsVO.setId(goods.getId());
@@ -287,6 +292,40 @@ public class UserOrderServiceImpl extends ServiceImpl<UserOrderMapper, UserOrder
         submitOrderVO.setGoods(goodsList);
         submitOrderVO.setSummary(orderInfoVO);
         return submitOrderVO;
+    }
+    @Override
+    public PageResult<OrderDetailVO> getOrderList(OrderQuery query) {
+        List<OrderDetailVO> list = new ArrayList<>();
+        // 1. 设置分页参数
+        Page<UserOrder> page = new Page<>(query.getPage(), query.getPageSize());
+        // 2. 查询条件：当orderType为空或0时，查询订单，否则根据订单状态条件查询
+        LambdaQueryWrapper<UserOrder> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserOrder::getUserId, query.getUserId());
+        if (query.getOrderType() != null && query.getOrderType() != 0) {
+            wrapper.eq(UserOrder::getStatus, query.getOrderType());
+        }
+        wrapper.orderByDesc(UserOrder::getCreateTime);
+        // 3. 查询所有订单列表（分页）
+        List<UserOrder> orderRecords = baseMapper.selectPage(page, wrapper).getRecords();
+        // 4. 查询为空，返回空分页内容
+        if (orderRecords.size() == 0) {
+            return new PageResult<>(page.getTotal(), query.getPageSize(), query.getPage(), page.getPages(), list);
+        }
+        // 5. 查询订单对应的商品信息和收货信息
+        for (UserOrder userOrder : orderRecords) {
+            OrderDetailVO orderDetailVO = UserOrderDetailConvert.INSTANCE.convertToOrderDetailVO(userOrder);
+            UserShippingAddress userShippingAddress = userShoppingAddressMapper.selectById(userOrder.getAddressId());
+            if (userShippingAddress != null) {
+                orderDetailVO.setReceiverContact(userShippingAddress.getReceiver());
+                orderDetailVO.setReceiverAddress(userShippingAddress.getAddress());
+                orderDetailVO.setReceiverMobile(userShippingAddress.getContact());
+            }
+            List<UserOrderGoods> userOrderGoods = userOrderGoodsMapper.selectList(new LambdaQueryWrapper<UserOrderGoods>().eq(UserOrderGoods::getOrderId, userOrder.getId()));
+            orderDetailVO.setSkus(userOrderGoods);
+            list.add(orderDetailVO);
+        }
+        return new PageResult<>(page.getTotal(), query.getPageSize(), query.getPage(), page.getPages(), list);
+
     }
     public List<UserAddressVO> getAddressListByUserId(Integer userId, Integer addressId) {
         // 1. 根据用户id查询该用户的收货地址列表
