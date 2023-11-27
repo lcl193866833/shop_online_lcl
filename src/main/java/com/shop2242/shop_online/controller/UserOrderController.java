@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.shop2242.shop_online.common.exception.ServerException;
 import com.shop2242.shop_online.common.result.Result;
 import com.shop2242.shop_online.service.UserOrderService;
+import com.shop2242.shop_online.vo.SubmitOrderVO;
 import com.shop2242.shop_online.vo.UserOrderVO;
 import com.shop2242.shop_online.vo.OrderDetailVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,5 +51,13 @@ public class UserOrderController {
         }
         OrderDetailVO orderDetail = userOrderService.getOrderDetail(id);
         return Result.ok(orderDetail);
+    }
+
+    @Operation(summary = "填写订单 - 获取预付订单")
+    @GetMapping("pre")
+    public Result<SubmitOrderVO> getPreOrderDetail(HttpServletRequest request) {
+        Integer userId = getUserId(request);
+        SubmitOrderVO preOrderDetail = userOrderService.getPreOrderDetail(userId);
+        return Result.ok(preOrderDetail);
     }
 }
