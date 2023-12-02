@@ -6,6 +6,7 @@ import com.shop2242.shop_online.common.exception.ServerException;
 import com.shop2242.shop_online.common.result.PageResult;
 import com.shop2242.shop_online.common.result.Result;
 import com.shop2242.shop_online.query.CancelGoodsQuery;
+import com.shop2242.shop_online.query.OrderPreQuery;
 import com.shop2242.shop_online.query.OrderQuery;
 import com.shop2242.shop_online.service.UserOrderService;
 import com.shop2242.shop_online.vo.OrderLogisticVO;
@@ -60,11 +61,19 @@ public class UserOrderController {
     }
 
     @Operation(summary = "填写订单 - 获取预付订单")
-    @GetMapping("pre/now")
+    @GetMapping("pre")
     public Result<SubmitOrderVO> getPreOrderDetail(HttpServletRequest request) {
         Integer userId = getUserId(request);
         SubmitOrderVO preOrderDetail = userOrderService.getPreOrderDetail(userId);
         return Result.ok(preOrderDetail);
+    }
+
+    @Operation(summary = "填写订单-获取立即购买订单")
+    @PostMapping("pre/now")
+    public Result<SubmitOrderVO> getPreNowOrderDetail(@RequestBody @Validated OrderPreQuery query, HttpServletRequest request) {
+        query.setUserId(getUserId(request));
+        SubmitOrderVO preNowOrderDetail = userOrderService.getPreNowOrderDetail(query);
+        return Result.ok(preNowOrderDetail);
     }
 
     @Operation(summary = "填写订单 - 获取再次购买订单")
