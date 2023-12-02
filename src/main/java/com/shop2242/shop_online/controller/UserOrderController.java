@@ -60,7 +60,7 @@ public class UserOrderController {
     }
 
     @Operation(summary = "填写订单 - 获取预付订单")
-    @GetMapping("pre")
+    @GetMapping("pre/now")
     public Result<SubmitOrderVO> getPreOrderDetail(HttpServletRequest request) {
         Integer userId = getUserId(request);
         SubmitOrderVO preOrderDetail = userOrderService.getPreOrderDetail(userId);
